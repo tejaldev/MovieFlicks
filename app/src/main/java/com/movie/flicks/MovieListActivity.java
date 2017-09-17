@@ -1,13 +1,12 @@
 package com.movie.flicks;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ListView;
 
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.movie.flicks.adapters.MovieAdapter;
@@ -22,11 +21,10 @@ import java.util.ArrayList;
 
 import cz.msebera.android.httpclient.Header;
 
-public class MovieListActivity extends AppCompatActivity {
+public class MovieListActivity extends AppCompatActivity implements MovieAdapter.MovieItemClickListener {
     public static String TAG = MovieListActivity.class.getSimpleName();
 
-    private ListView listView;
-    private Context context;
+    private RecyclerView movieRecyclerView;
     private MovieAdapter itemAdapter;
 
     @Override
@@ -34,8 +32,8 @@ public class MovieListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movie_list);
 
-        context = this;
-        listView = (ListView) findViewById(R.id.movie_list);
+        movieRecyclerView = (RecyclerView) findViewById(R.id.movie_recycler_view);
+        movieRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         MovieApiRestClient.get("now_playing", null, new JsonHttpResponseHandler() {
             @Override
@@ -67,22 +65,19 @@ public class MovieListActivity extends AppCompatActivity {
                 Log.e(TAG, "Failed to receive api response: " + responseString, throwable);
             }
         });
+    }
 
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                launchMovieDetailActivity(itemAdapter.getItem(position));
-            }
-        });
+    @Override
+    public void onMovieItemClickListener(View view, int position) {
+        launchMovieDetailActivity(itemAdapter.getItemAtPosition(position));
     }
 
     private void setItemAdapter(final ArrayList<Movie> movieList) {
+        itemAdapter = new MovieAdapter(movieList, this);
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                itemAdapter = new MovieAdapter(context, movieList);
-                itemAdapter.notifyDataSetChanged();
-                listView.setAdapter(itemAdapter);
+                movieRecyclerView.setAdapter(itemAdapter);
             }
         });
     }

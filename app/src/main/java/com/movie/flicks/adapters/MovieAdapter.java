@@ -1,11 +1,10 @@
 package com.movie.flicks.adapters;
 
-import android.content.Context;
 import android.content.res.Configuration;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -17,96 +16,145 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Movie item adapter
+ * Movie recycler view adapter
  *
  * @author tejalpar
  */
-public class MovieAdapter extends ArrayAdapter<Movie> {
+public class MovieAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+    private static final int MOVIE_VIEW_TYPE = 0;
     private static final int POPULAR_MOVIE_VIEW_TYPE = 1;
 
     private List<Movie> movieList;
+    private MovieItemClickListener itemClickListener;
 
-    public MovieAdapter(Context context, ArrayList<Movie> movieList) {
-        super(context, R.layout.movie_row_layout, movieList);
+    public interface MovieItemClickListener {
+        void onMovieItemClickListener (View view, int position);
+    }
+
+    public MovieAdapter(ArrayList<Movie> movieList, MovieItemClickListener itemClickListener) {
         this.movieList = movieList;
+        this.itemClickListener = itemClickListener;
+    }
+
+    public Movie getItemAtPosition(int position) {
+        return movieList.get(position);
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        ItemViewHolder holder = null;
-        Movie currentMovie = movieList.get(position);
-
-        if (convertView == null) {
-            holder = new ItemViewHolder();
-
-            switch (getItemViewType(position)) {
-                case POPULAR_MOVIE_VIEW_TYPE:
-                    convertView = LayoutInflater.from(getContext()).inflate(R.layout.popular_movie_row_layout, parent, false);
-                    holder.posterImageView = (ImageView) convertView.findViewById(R.id.popular_movie_poster);
-                    break;
-
-                default:
-                    convertView = LayoutInflater.from(getContext()).inflate(R.layout.movie_row_layout, parent, false);
-                    holder.movieTitleText = (TextView) convertView.findViewById(R.id.movie_title);
-                    holder.movieOverviewText = (TextView) convertView.findViewById(R.id.movie_overview);
-                    holder.posterImageView = (ImageView) convertView.findViewById(R.id.movie_poster);
-                    break;
-            }
-            convertView.setTag(holder);
-        } else {
-            // just retrieve holder from tag
-            holder = (ItemViewHolder) convertView.getTag();
-        }
-
-        // now bind data in holder based on view Type
-        if (getItemViewType(position) == POPULAR_MOVIE_VIEW_TYPE) {
-            Picasso.with(this.getContext())
-                    .load(Movie.getAbsoluteMoviePath(currentMovie.backDropUrl))
-                    .placeholder(R.drawable.placeholder_image)
-                    .into(holder.posterImageView);
-        } else {
-            // check orientation and set poster or backdrop url
-            switch (getContext().getResources().getConfiguration().orientation) {
-                case Configuration.ORIENTATION_LANDSCAPE:
-                    Picasso.with(this.getContext())
-                            .load(Movie.getAbsoluteMoviePath(currentMovie.backDropUrl))
-                            .placeholder(R.drawable.placeholder_image)
-                            .into(holder.posterImageView);
-                    break;
-
-                default:
-                    Picasso.with(this.getContext())
-                            .load(Movie.getAbsoluteMoviePath(currentMovie.posterUrl))
-                            .placeholder(R.drawable.placeholder_image)
-                            .into(holder.posterImageView);
-                    break;
-
-            }
-            // bind text data
-            holder.movieTitleText.setText(currentMovie.title);
-            holder.movieOverviewText.setText(currentMovie.overview);
-        }
-
-        return convertView;
-    }
-
-    @Override
-    public int getViewTypeCount() {
-        // 2 types of views
-        return 2;
+    public int getItemCount() {
+        return movieList.size();
     }
 
     @Override
     public int getItemViewType(int position) {
-        if (getItem(position).isPopular()) {
+        if (movieList.get(position).isPopular()) {
             return POPULAR_MOVIE_VIEW_TYPE;
         }
-        return super.getItemViewType(position);
+        return MOVIE_VIEW_TYPE;
     }
 
-    private static class ItemViewHolder {
+    @Override
+    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+
+        RecyclerView.ViewHolder viewHolder;
+        LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+
+        // inflate view based on viewType
+        switch (viewType) {
+            case POPULAR_MOVIE_VIEW_TYPE:
+                View popularView = inflater.inflate(R.layout.popular_movie_row_layout, parent, false);
+
+                //create viewholder from above view
+                viewHolder = new PopularMovieViewHolder(popularView);
+                break;
+
+            case MOVIE_VIEW_TYPE:
+            default:
+                View movieView = inflater.inflate(R.layout.movie_row_layout, parent, false);
+                viewHolder = new MovieViewHolder(movieView);
+                break;
+        }
+        return viewHolder;
+    }
+
+    @Override
+    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+
+        switch (getItemViewType(position)) {
+            case POPULAR_MOVIE_VIEW_TYPE:
+                PopularMovieViewHolder popularMovieViewHolder = (PopularMovieViewHolder) holder;
+                Picasso.with(popularMovieViewHolder.itemView.getContext())
+                        .load(Movie.getAbsoluteMoviePath(movieList.get(position).backDropUrl))
+                        .placeholder(R.drawable.placeholder_image)
+                        .into(popularMovieViewHolder.backdropImageView);
+                break;
+
+            case MOVIE_VIEW_TYPE:
+                MovieViewHolder movieViewHolder = (MovieViewHolder) holder;
+                setupMovieViewHolder(movieViewHolder, position);
+            default:
+
+                break;
+        }
+    }
+
+    public class MovieViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         public TextView movieTitleText;
         public TextView movieOverviewText;
         public ImageView posterImageView;
+
+        public MovieViewHolder(View rootView) {
+            super(rootView);
+
+            rootView.setOnClickListener(this);
+            movieTitleText = (TextView) rootView.findViewById(R.id.movie_title);
+            movieOverviewText = (TextView) rootView.findViewById(R.id.movie_overview);
+            posterImageView = (ImageView) rootView.findViewById(R.id.movie_poster);
+        }
+
+        @Override
+        public void onClick(View view) {
+            itemClickListener.onMovieItemClickListener(view, getAdapterPosition());
+        }
+    }
+
+    public class PopularMovieViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+        public ImageView backdropImageView;
+
+        public PopularMovieViewHolder(View rootView) {
+            super(rootView);
+
+            rootView.setOnClickListener(this);
+            backdropImageView = (ImageView) rootView.findViewById(R.id.popular_movie_poster);
+        }
+
+        @Override
+        public void onClick(View view) {
+            itemClickListener.onMovieItemClickListener(view, getAdapterPosition());
+        }
+    }
+
+    private void setupMovieViewHolder(MovieViewHolder holder, int position) {
+        Movie movie = movieList.get(position);
+
+        switch (holder.itemView.getContext().getResources().getConfiguration().orientation) {
+            case Configuration.ORIENTATION_LANDSCAPE:
+                Picasso.with(holder.itemView.getContext())
+                        .load(Movie.getAbsoluteMoviePath(movie.backDropUrl))
+                        .placeholder(R.drawable.placeholder_image)
+                        .into(holder.posterImageView);
+                break;
+
+            default:
+                Picasso.with(holder.itemView.getContext())
+                        .load(Movie.getAbsoluteMoviePath(movie.posterUrl))
+                        .placeholder(R.drawable.placeholder_image)
+                        .into(holder.posterImageView);
+                break;
+
+        }
+        // bind text data
+        holder.movieTitleText.setText(movie.title);
+        holder.movieOverviewText.setText(movie.overview);
     }
 }
