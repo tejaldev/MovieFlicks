@@ -1,17 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent" android:background="@android:color/black">
+<android.support.percent.PercentRelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/black">
 
     <ImageView
         android:id="@+id/movie_poster"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
+        app:layout_widthPercent="55%"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
-        android:paddingTop="15dp"/>
+        android:contentDescription="@string/content_description"
+        android:paddingTop="@dimen/movie_image_padding_top"
+        android:adjustViewBounds="true"
+        android:scaleType="fitXY"/>
 
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
+        app:layout_widthPercent="45%"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:layout_toRightOf="@id/movie_poster">
@@ -20,24 +28,21 @@
             android:id="@+id/movie_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="16sp"
+            android:textSize="@dimen/movie_title_text_size"
             android:textStyle="bold"
             android:textColor="@android:color/white"
-            android:paddingTop="15dp"
+            android:paddingTop="@dimen/movie_image_padding_top"
             android:paddingStart="?android:attr/listPreferredItemPaddingStart"
-            android:paddingEnd="?android:attr/listPreferredItemPaddingEnd"
-             />
+            android:paddingEnd="?android:attr/listPreferredItemPaddingEnd" />
 
         <TextView
             android:id="@+id/movie_overview"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="12sp"
-            android:textColor="@android:color/white"
-            android:paddingTop="?android:attr/listPreferredItemPaddingStart"
+            android:textSize="@dimen/movie_overview_text_size"
+            android:textColor="@android:color/darker_gray"
             android:paddingStart="?android:attr/listPreferredItemPaddingStart"
-            android:paddingEnd="?android:attr/listPreferredItemPaddingEnd"
-            android:minHeight="?android:attr/listPreferredItemHeightSmall" />
+            android:paddingEnd="?android:attr/listPreferredItemPaddingEnd" />
     </LinearLayout>
 
-</RelativeLayout>
+</android.support.percent.PercentRelativeLayout>

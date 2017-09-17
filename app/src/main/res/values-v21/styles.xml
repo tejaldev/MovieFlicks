@@ -1,0 +1,14 @@
+<resources>>
+
+    <style name="AppTheme.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
+
+    <style name="movieRatingBarStyle" parent="@android:style/Widget.RatingBar">
+        <item name="android:progressBackgroundTint">@android:color/darker_gray</item>
+        <item name="android:ratingBarStyle">@color/ratingColor</item>
+    </style>
+</resources>
