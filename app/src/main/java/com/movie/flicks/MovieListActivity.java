@@ -1,14 +1,15 @@
 package com.movie.flicks;
 
 import android.content.Context;
-import android.support.v7.app.AppCompatActivity;
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.widget.ArrayAdapter;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.loopj.android.http.JsonHttpResponseHandler;
-import com.loopj.android.http.TextHttpResponseHandler;
 import com.movie.flicks.adapters.MovieAdapter;
 import com.movie.flicks.models.Movie;
 import com.movie.flicks.network.MovieApiRestClient;
@@ -45,13 +46,14 @@ public class MovieListActivity extends AppCompatActivity {
                 try {
                     JSONArray resultsJson = response.getJSONArray("results");
 
-                    for (int i=0; i < resultsJson.length(); i++) {
+                    for (int i = 0; i < resultsJson.length(); i++) {
                         Movie movie = new Movie();
                         JSONObject item = resultsJson.getJSONObject(i);
                         movie.title = item.optString("title");
                         movie.posterUrl = item.optString("poster_path");
                         movie.backDropUrl = item.optString("backdrop_path");
                         movie.overview = item.optString("overview");
+                        movie.voteAverage = item.optDouble("vote_average");
                         movieList.add(movie);
                     }
                     setItemAdapter(movieList);
@@ -65,10 +67,16 @@ public class MovieListActivity extends AppCompatActivity {
                 Log.e(TAG, "Failed to receive api response: " + responseString, throwable);
             }
         });
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                launchMovieDetailActivity(itemAdapter.getItem(position));
+            }
+        });
     }
 
     private void setItemAdapter(final ArrayList<Movie> movieList) {
-
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -77,5 +85,11 @@ public class MovieListActivity extends AppCompatActivity {
                 listView.setAdapter(itemAdapter);
             }
         });
+    }
+
+    private void launchMovieDetailActivity(Movie movie) {
+        Intent intent = new Intent(MovieListActivity.this, MovieDetailsActivity.class);
+        intent.putExtra(Movie.PARCEL_KEY, movie);
+        startActivity(intent);
     }
 }
