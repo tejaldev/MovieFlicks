@@ -22,6 +22,7 @@ import java.util.List;
  * @author tejalpar
  */
 public class MovieAdapter extends ArrayAdapter<Movie> {
+    private static final int POPULAR_MOVIE_VIEW_TYPE = 1;
 
     private List<Movie> movieList;
 
@@ -33,38 +34,74 @@ public class MovieAdapter extends ArrayAdapter<Movie> {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         ItemViewHolder holder = null;
+        Movie currentMovie = movieList.get(position);
 
         if (convertView == null) {
-            /* means create an item from inflater */
-
-            // inflate layout for convertView
-            LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            convertView = inflater.inflate(R.layout.movie_row_layout, parent, false);
-
-            // populate holder & add it as a tag to convertView to be used later
             holder = new ItemViewHolder();
-            holder.movieTitleText = (TextView) convertView.findViewById(R.id.movie_title);
-            holder.movieOverviewText = (TextView) convertView.findViewById(R.id.movie_overview);
-            holder.posterImageView = (ImageView) convertView.findViewById(R.id.movie_poster);
-            convertView.setTag(holder);
 
+            switch (getItemViewType(position)) {
+                case POPULAR_MOVIE_VIEW_TYPE:
+                    convertView = LayoutInflater.from(getContext()).inflate(R.layout.popular_movie_row_layout, parent, false);
+                    holder.posterImageView = (ImageView) convertView.findViewById(R.id.popular_movie_poster);
+                    break;
+
+                default:
+                    convertView = LayoutInflater.from(getContext()).inflate(R.layout.movie_row_layout, parent, false);
+                    holder.movieTitleText = (TextView) convertView.findViewById(R.id.movie_title);
+                    holder.movieOverviewText = (TextView) convertView.findViewById(R.id.movie_overview);
+                    holder.posterImageView = (ImageView) convertView.findViewById(R.id.movie_poster);
+                    break;
+            }
+            convertView.setTag(holder);
         } else {
             // just retrieve holder from tag
             holder = (ItemViewHolder) convertView.getTag();
         }
 
-        // now bind data to view
-        holder.movieTitleText.setText(movieList.get(position).title);
-        holder.movieOverviewText.setText(movieList.get(position).overview);
-
-        if (getContext().getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            // load image
-            Picasso.with(this.getContext()).load(Movie.getAbsoluteMoviePath(movieList.get(position).backDropUrl)).resize(500, 300).into(holder.posterImageView);
+        // now bind data in holder based on view Type
+        if (getItemViewType(position) == POPULAR_MOVIE_VIEW_TYPE) {
+            Picasso.with(this.getContext())
+                    .load(Movie.getAbsoluteMoviePath(currentMovie.backDropUrl))
+                    .placeholder(R.drawable.placeholder_image)
+                    .into(holder.posterImageView);
         } else {
-            Picasso.with(this.getContext()).load(Movie.getAbsoluteMoviePath(movieList.get(position).posterUrl)).resize(200, 300).into(holder.posterImageView);
+            // check orientation and set poster or backdrop url
+            switch (getContext().getResources().getConfiguration().orientation) {
+                case Configuration.ORIENTATION_LANDSCAPE:
+                    Picasso.with(this.getContext())
+                            .load(Movie.getAbsoluteMoviePath(currentMovie.backDropUrl))
+                            .placeholder(R.drawable.placeholder_image)
+                            .into(holder.posterImageView);
+                    break;
+
+                default:
+                    Picasso.with(this.getContext())
+                            .load(Movie.getAbsoluteMoviePath(currentMovie.posterUrl))
+                            .placeholder(R.drawable.placeholder_image)
+                            .into(holder.posterImageView);
+                    break;
+
+            }
+            // bind text data
+            holder.movieTitleText.setText(currentMovie.title);
+            holder.movieOverviewText.setText(currentMovie.overview);
         }
 
         return convertView;
+    }
+
+    @Override
+    public int getViewTypeCount() {
+        // 2 types of views
+        return 2;
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        if (getItem(position).isPopular()) {
+            return POPULAR_MOVIE_VIEW_TYPE;
+        }
+        return super.getItemViewType(position);
     }
 
     private static class ItemViewHolder {
