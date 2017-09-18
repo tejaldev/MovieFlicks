@@ -8,6 +8,8 @@ import com.loopj.android.http.RequestParams;
  * @author tejalpar
  */
 public class MovieApiRestClient {
+    public static final String NOW_PLAYING_RELATIVE_URL = "now_playing";
+    public static final String MOVIE_VIDEO_RELATIVE_URL = "videos";
 
     private static final String BASE_URL = "https://api.themoviedb.org/3/movie/";
     private static final String API_KEY = "a07e22bc18f5cb106bfe4cc1f83ad8ed";
@@ -24,6 +26,10 @@ public class MovieApiRestClient {
 
     private static String getAbsoluteUrl(String relativeUrl) {
         return BASE_URL + relativeUrl;
+    }
+
+    public static String buildVideoUrl(String relativeUrl, int movieId) {
+        return movieId + "/" + relativeUrl;
     }
 
     private static RequestParams getRequestParams(RequestParams params) {
