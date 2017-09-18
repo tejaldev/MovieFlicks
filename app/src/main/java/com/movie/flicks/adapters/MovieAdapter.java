@@ -8,11 +8,16 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.android.youtube.player.YouTubeInitializationResult;
+import com.google.android.youtube.player.YouTubePlayer;
+import com.google.android.youtube.player.YouTubePlayerView;
 import com.movie.flicks.R;
 import com.movie.flicks.models.Movie;
+import com.movie.flicks.models.Video;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -29,6 +34,7 @@ public class MovieAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
 
     public interface MovieItemClickListener {
         void onMovieItemClickListener (View view, int position);
+        void onPopularMovieItemClickListener (View view, int position);
     }
 
     public MovieAdapter(ArrayList<Movie> movieList, MovieItemClickListener itemClickListener) {
@@ -38,6 +44,19 @@ public class MovieAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
 
     public Movie getItemAtPosition(int position) {
         return movieList.get(position);
+    }
+
+    public void setMoreData(List<Movie> moreItemList) {
+        movieList.addAll(moreItemList);
+        this.notifyItemInserted(moreItemList.size());
+    }
+
+    public void setVideoDetails(Movie movie, Video video) {
+        int index = getIndexForItem(movie.movieId);
+        Movie lookupMovie = getItemAtPosition(index);
+        lookupMovie.trailerVideo = video;
+        movieList.set(index, lookupMovie);
+        this.notifyItemChanged(index);
     }
 
     @Override
@@ -64,7 +83,7 @@ public class MovieAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             case POPULAR_MOVIE_VIEW_TYPE:
                 View popularView = inflater.inflate(R.layout.popular_movie_row_layout, parent, false);
 
-                //create viewholder from above view
+                //create view holder from above view
                 viewHolder = new PopularMovieViewHolder(popularView);
                 break;
 
@@ -78,7 +97,7 @@ public class MovieAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     }
 
     @Override
-    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+    public void onBindViewHolder(RecyclerView.ViewHolder holder, final int position) {
 
         switch (getItemViewType(position)) {
             case POPULAR_MOVIE_VIEW_TYPE:
@@ -90,12 +109,46 @@ public class MovieAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
                 break;
 
             case MOVIE_VIEW_TYPE:
+            default:
                 MovieViewHolder movieViewHolder = (MovieViewHolder) holder;
                 setupMovieViewHolder(movieViewHolder, position);
-            default:
-
                 break;
         }
+    }
+
+    private void setupMovieViewHolder(MovieViewHolder holder, int position) {
+        Movie movie = movieList.get(position);
+
+        switch (holder.itemView.getContext().getResources().getConfiguration().orientation) {
+            case Configuration.ORIENTATION_LANDSCAPE:
+                Picasso.with(holder.itemView.getContext())
+                        .load(Movie.getAbsoluteMoviePath(movie.backDropUrl))
+                        .placeholder(R.drawable.placeholder_image)
+                        .into(holder.posterImageView);
+                break;
+
+            default:
+                Picasso.with(holder.itemView.getContext())
+                        .load(Movie.getAbsoluteMoviePath(movie.posterUrl))
+                        .placeholder(R.drawable.placeholder_image)
+                        .into(holder.posterImageView);
+                break;
+
+        }
+        // bind text data
+        holder.movieTitleText.setText(movie.title);
+        holder.movieOverviewText.setText(movie.overview);
+    }
+
+    private int getIndexForItem(int id) {
+        int index = 0;
+        for(Movie o : movieList) {
+            if(o != null && o.movieId == id) {
+                return index;
+            }
+            index++;
+        }
+        return index;
     }
 
     public class MovieViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
@@ -130,31 +183,7 @@ public class MovieAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
 
         @Override
         public void onClick(View view) {
-            itemClickListener.onMovieItemClickListener(view, getAdapterPosition());
+            itemClickListener.onPopularMovieItemClickListener(view, getAdapterPosition());
         }
-    }
-
-    private void setupMovieViewHolder(MovieViewHolder holder, int position) {
-        Movie movie = movieList.get(position);
-
-        switch (holder.itemView.getContext().getResources().getConfiguration().orientation) {
-            case Configuration.ORIENTATION_LANDSCAPE:
-                Picasso.with(holder.itemView.getContext())
-                        .load(Movie.getAbsoluteMoviePath(movie.backDropUrl))
-                        .placeholder(R.drawable.placeholder_image)
-                        .into(holder.posterImageView);
-                break;
-
-            default:
-                Picasso.with(holder.itemView.getContext())
-                        .load(Movie.getAbsoluteMoviePath(movie.posterUrl))
-                        .placeholder(R.drawable.placeholder_image)
-                        .into(holder.posterImageView);
-                break;
-
-        }
-        // bind text data
-        holder.movieTitleText.setText(movie.title);
-        holder.movieOverviewText.setText(movie.overview);
     }
 }

@@ -8,7 +8,7 @@ import android.os.Parcelable;
  *
  * @author tejalpar
  */
-public class Movie implements Parcelable{
+public class Movie implements Parcelable {
     public static final String BASE_MOVIE_PATH = "https://image.tmdb.org/t/p/w500";
     public static final String PARCEL_KEY = "MOVIE_DATA";
 
@@ -18,15 +18,16 @@ public class Movie implements Parcelable{
     private static double RATING_MIN = 1;
     private static double RATING_MAX = 5;
 
+    public int movieId;
     public String title;
     public String overview;
     public String posterUrl;
     public String backDropUrl;
     public double voteAverage;
 
-    public Movie() {
+    public Video trailerVideo;
 
-    }
+    public Movie() {}
 
     public Movie(Parcel source) {
         // read values from parcel
@@ -52,6 +53,7 @@ public class Movie implements Parcelable{
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(movieId);
         dest.writeString(title);
         dest.writeString(overview);
         dest.writeString(posterUrl);
@@ -61,6 +63,7 @@ public class Movie implements Parcelable{
 
     private void readFromParcel(Parcel source) {
         // read in same order as written
+        movieId = source.readInt();
         title = source.readString();
         overview = source.readString();
         posterUrl = source.readString();
